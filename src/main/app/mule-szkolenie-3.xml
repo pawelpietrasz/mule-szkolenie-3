@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" doc:name="HTTP Request Configuration"/>
+    <flow name="mule-szkolenie-3Flow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/lesson3" allowedMethods="GET" doc:name="HTTP"/>
+        <logger message="#[message.inboundProperties]" level="INFO" doc:name="Logger"/>
+        <flow-ref name="SetVars" doc:name="Flow Reference"/>
+        <set-payload value="{
+	&quot;FirstName&quot;: &quot;#[flowVars.firstName.toUpperCase()]&quot;,
+	&quot;LastName&quot;: &quot;#[flowVars.lastName.toUpperCase()]&quot;
+}" doc:name="Set Payload"/>
+    </flow>
+    <sub-flow name="SetVars">
+        <set-variable variableName="firstName" value="#[message.inboundProperties.'http.query.params'.name]" doc:name="Variable"/>
+        <set-variable variableName="lastName" value="#[message.inboundProperties.'http.query.params'.surname]" doc:name="Variable"/>
+    </sub-flow>
+    <flow name="mule-szkolenie-3Flow1">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/lesson3b/name/{name}/surname/{surname}" allowedMethods="GET" doc:name="HTTP"/>
+        <logger message="#[message.inboundProperties.'http.uri.params']" level="INFO" doc:name="Logger"/>
+        <set-property propertyName="customProperty" value="#['aaaa']" doc:name="Property"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/lesson3" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="name" value="#[message.inboundProperties.'http.uri.params'.name]"/>
+                <http:query-param paramName="surname" value="#[message.inboundProperties.'http.uri.params'.surname]"/>
+            </http:request-builder>
+        </http:request>
+    </flow>
+</mule>
